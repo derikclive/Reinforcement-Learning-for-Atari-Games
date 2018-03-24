@@ -18,7 +18,7 @@ EPISODES = 50000
 class DQNAgent:
     def __init__(self, action_size):
         self.render = False
-        self.load_model = False
+        self.load_model = True
         # environment settings
         self.state_size = (84, 84, 4)
         self.action_size = action_size
@@ -178,6 +178,8 @@ def pre_processing(observe):
     return processed_observe
 
 
+
+
 if __name__ == "__main__":
     # In case of BreakoutDeterministic-v3, always skip 4 frames
     # Deterministic-v4 version use 4 actions
@@ -186,7 +188,10 @@ if __name__ == "__main__":
 
     scores, episodes, global_step = [], [], 0
 
-    for e in range(EPISODES):
+
+    # agent.model.render = True
+
+    for e in range(100):
         done = False
         dead = False
         # 1 episode = 5 lives
@@ -205,13 +210,14 @@ if __name__ == "__main__":
         history = np.reshape([history], (1, 84, 84, 4))
 
         while not done:
-            if agent.render:
-                env.render()
+            # if agent.render:
+            env.render()
             global_step += 1
             step += 1
 
             # get action for the current history and go one step in environment
             action = agent.get_action(history)
+            action = np.argmax(agent.model.predict(np.float32(history / 255.))[0])
             # change action to real_action
             if action == 0:
                 real_action = 1
@@ -236,13 +242,13 @@ if __name__ == "__main__":
 
             reward = np.clip(reward, -1., 1.)
 
-            # save the sample <s, a, r, s'> to the replay memory
-            agent.replay_memory(history, action, reward, next_history, dead)
-            # every some time interval, train model
-            agent.train_replay()
-            # update the target model with model
-            if global_step % agent.update_target_rate == 0:
-                agent.update_target_model()
+            # # save the sample <s, a, r, s'> to the replay memory
+            # agent.replay_memory(history, action, reward, next_history, dead)
+            # # every some time interval, train model
+            # agent.train_replay()
+            # # update the target model with model
+            # if global_step % agent.update_target_rate == 0:
+            #     agent.update_target_model()
 
             score += reward
 
@@ -254,15 +260,15 @@ if __name__ == "__main__":
 
             # if done, plot the score over episodes
             if done:
-                if global_step > agent.train_start:
-                    stats = [score, agent.avg_q_max / float(step), step,
-                             agent.avg_loss / float(step)]
-                    for i in range(len(stats)):
-                        agent.sess.run(agent.update_ops[i], feed_dict={
-                            agent.summary_placeholders[i]: float(stats[i])
-                        })
-                    summary_str = agent.sess.run(agent.summary_op)
-                    agent.summary_writer.add_summary(summary_str, e + 1)
+                # if global_step > agent.train_start:
+                #     stats = [score, agent.avg_q_max / float(step), step,
+                #              agent.avg_loss / float(step)]
+                #     for i in range(len(stats)):
+                #         agent.sess.run(agent.update_ops[i], feed_dict={
+                #             agent.summary_placeholders[i]: float(stats[i])
+                #         })
+                #     summary_str = agent.sess.run(agent.summary_op)
+                #     agent.summary_writer.add_summary(summary_str, e + 1)
 
                 print("episode:", e, "  score:", score, "  memory length:",
                       len(agent.memory), "  epsilon:", agent.epsilon,
@@ -272,6 +278,10 @@ if __name__ == "__main__":
 
                 agent.avg_q_max, agent.avg_loss = 0, 0
 
-        if e % 1000 == 0:
-            agent.model.save_weights("breakout_dqn.h5")
+       # if e % 1000 == 0:
+            #agent.model.save_weights("breakout_dqn.h5")
+
+
+
+
   
